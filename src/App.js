@@ -11,6 +11,7 @@ import { KategoriPages } from './pages/KategoriPages';
 import { ProfilePages } from './pages/ProfilePages';
 import { WisataPages } from './pages/WisataPages';
 import LandingPages from './pages/LandingPages';
+import { KonfigurasiPages } from './pages/KonfigurasiPages';
 // import { UtamaLanding } from './componen/landing/utamaLanding';
 
 //User
@@ -36,7 +37,7 @@ function App() {
     <Route path="/kategori" element={<KategoriPages />} />
     <Route path="/wisata" element={<WisataPages />} />
     <Route path="/profile" element={<ProfilePages />} />
-
+    <Route path="/konfigurasi" element={<KonfigurasiPages />} />
     {/* USER ROUTE */}
     <Route path="/userdashboard" element={<UserDashboardPages />} />
     

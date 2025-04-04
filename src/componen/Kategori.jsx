@@ -11,11 +11,16 @@ import {
   Paper,
   Snackbar,
   Alert,
+   Button,
   IconButton,
+  Modal
 } from "@mui/material";
 import useSWR, { mutate } from "swr";
 import axios from "axios";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import CreateKagetori from "./AdminModal/Kategori/createKategori";
+import AddIcon from "@mui/icons-material/Add";
 
 const getApiBaseUrl = () => {
   const protocol = window.location.protocol === "https:" ? "https" : "http";
@@ -31,7 +36,33 @@ const Kategori = () => {
     fetcher
   );
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
 
+  const [selectedKategori, setSelectedKategori] = useState(null)
+  const [selectedKategoriId, setSelectedKategoriId] = useState(null)
+
+  const handleUpdateOpen = (Kategori) => {
+    setSelectedKategori(Kategori.id)
+    setUpdateModalOpen(true);
+  }
+  const handleUpdateClose = () => {
+    setUpdateModalOpen(false);
+    setSelectedKategoriId(null);
+  };
+
+  const handleCreateOpen = () => {
+    setCreateModalOpen(true);
+  };
+
+  const handleCreateClose = () => {
+    setCreateModalOpen(false);
+  };
+
+  const refreshData = () => {
+    mutate(`${getApiBaseUrl()}/getkategori`);
+    setSnackbar({ open: true, message: "Data berhasil diperbarui", severity: "success" });
+  };
   const deleteKategori = async (id) => {
     const userConfirm = window.confirm("Apakah anda yakin ingin menghapus kategori ini?");
     if (userConfirm) {
@@ -56,6 +87,13 @@ const Kategori = () => {
         <Typography variant="h6" gutterBottom>
           Manage Kategori
         </Typography>
+         <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateOpen}
+                >
+                  Tambah Kategori
+                </Button>
       </Box>
 
       <TableContainer component={Paper} sx={{ boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}>
@@ -90,6 +128,16 @@ const Kategori = () => {
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleUpdateOpen(kategori)}
+                      sx={{ 
+                        color: 'warning.main',
+                        '&:hover': { backgroundColor: 'warning.lighter' },
+                      }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
                   </Box>
                 </TableCell>
               </TableRow>
@@ -97,7 +145,36 @@ const Kategori = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
+      <Modal
+  open={createModalOpen}
+  onClose={handleCreateClose}
+  aria-labelledby="create-modal-title"
+>
+  <Box
+    sx={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: { xs: '90%', sm: 600 },
+      bgcolor: 'background.paper',
+      borderRadius: 2,
+      boxShadow: 24,
+      p: 3,
+      maxHeight: '90vh',
+      overflow: 'auto',
+    }}
+  >
+    <Typography id="create-modal-title" variant="h6" gutterBottom>
+      Tambah Wisata Baru
+    </Typography>
+    <CreateKagetori 
+      open={createModalOpen}  // Pass the open state
+      handleClose={handleCreateClose} 
+      refreshData={refreshData} 
+    />
+  </Box>
+</Modal>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
