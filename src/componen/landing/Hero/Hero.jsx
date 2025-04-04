@@ -39,6 +39,9 @@ export const Hero = () => {
     background,
   } = konfigurasiData.data;
 
+  // URL Video YouTube (Pastikan ID Video Benar)
+  const youtubeVideoUrl = "https://www.youtube.com/embed/aKtb7Y3qOck?autoplay=1";
+
   return (
     <>
       <section id='hero' style={{ backgroundImage: `url(${getApiBaseUrl()}${background})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -51,7 +54,6 @@ export const Hero = () => {
                   Welcome to {namaTravel}
                 </h1>
                 <h2 className='font-volkhov fw-bold'>
-                  {/* Explore, <ins className='text-decoration-none'>enjoy</ins>, and create memories */}
                   {text}
                 </h2>
                 <p className='font-poppins'>
@@ -100,12 +102,15 @@ export const Hero = () => {
       >
         <Modal.Body>
           <Ratio aspectRatio='16x9'>
-            <video controls='controls' autoPlay>
-              <source
-                src={`${process.env.PUBLIC_URL}/videos/demo.mp4`}
-                type='video/mp4'
-              />
-            </video>
+            <iframe
+              width="100%"
+              height="100%"
+              src={youtubeVideoUrl}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
           </Ratio>
         </Modal.Body>
       </Modal>
