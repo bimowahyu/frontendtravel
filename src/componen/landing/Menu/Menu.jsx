@@ -100,7 +100,8 @@ export const Menu = () => {
                 <Spinner animation="border" size="sm" />
               ) : isAuthenticated ? (
                 <>
-                  {user && <span className="me-3 d-flex align-items-center">Hi, { user.username}</span>}
+                  {user && <span className="me-3 d-flex align-items-center">Hi, { user.data.username}</span>}
+                  {/* {user && console.log("User data:", user) && <span className="me-3 d-flex align-items-center">Hi, {user.data?.username}</span>} */}
                   <Button
                     variant='light'
                     className='bg-transparent border-0 fw-medium'
