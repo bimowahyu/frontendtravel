@@ -30,9 +30,8 @@ export const Menu = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Get authentication state from Redux
   const { isAuthenticated, user, isLoading: authLoading } = useSelector(state => state.auth);
-  
+  const userRole = user?.data?.role;
   const { data: logoData, error } = useSWR(`${getApiBaseUrl()}/getkonfigurasi`, fetcher);
   const [scrolling, setScrolling] = useState(false);
 
@@ -47,13 +46,14 @@ export const Menu = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  // Handle login/signup button clicks
   const handleLogin = () => navigate('/login');
   const handleSignup = () => navigate('/signup');
   const handleLogout = async () => {
     await dispatch(Logout());
     navigate('/');
+  };
+  const handleDashboard = async () => {
+    navigate('/userdashboard');
   };
 
   if (error) return <Alert variant="danger">Gagal memuat logo!</Alert>;
@@ -109,6 +109,15 @@ export const Menu = () => {
                   >
                     Logout
                   </Button>
+                  {user && userRole  === "user" && (
+                  <Button
+                    variant='light'
+                    className='bg-transparent border-0 fw-medium'
+                    onClick={handleDashboard}
+                  >
+                    Dashboard
+                  </Button>
+                  )}
                 </>
               ) : (
                 <>

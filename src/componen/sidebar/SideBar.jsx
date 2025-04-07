@@ -17,22 +17,18 @@ import { Logout, reset, Me } from "../../fitur/AuthSlice";
 export const Sidebar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
-  // Improved state selection - handle possible undefined states
   const auth = useSelector((state) => state.auth || {});
   const { user, isLoading } = auth;
     
-  // Extract role from the proper path in the data structure
   const userRole = user?.data?.role;
   
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
   useEffect(() => {
-    // Only fetch user data if we don't already have it
     if (!user) {
       dispatch(Me());
     }
-  }, [dispatch, user]); // Add user as dependency to prevent infinite calls
+  }, [dispatch, user]); 
   
   useEffect(() => {
     console.log("Auth state:", auth);
@@ -77,10 +73,8 @@ export const Sidebar = () => {
       boxShadow: "0 4px 6px rgba(177, 240, 247, 0.2)",
     },
   };
-
-  // Handle loading state
   if (isLoading) {
-    return <div>Loading...</div>; // Consider a better loading indicator
+    return <div>Loading...</div>; 
   }
 
   return (
@@ -157,8 +151,11 @@ export const Sidebar = () => {
       <Typography component={NavLink} to="/pemberangkatan" sx={navLinkStyle}>
         Pemberangkatan
       </Typography>
-      <Typography component={NavLink} to="/updateprofile" sx={navLinkStyle}>
+      <Typography component={NavLink} to="/profile" sx={navLinkStyle}>
         Update Profile
+      </Typography>
+      <Typography component={NavLink} to="/" sx={navLinkStyle}>
+        Halaman Pemesanan
       </Typography>
     </>
   )}
@@ -178,6 +175,9 @@ export const Sidebar = () => {
             </Typography>
             <Typography component={NavLink} to="/konfigurasi" sx={navLinkStyle}>
               Konfigurasi
+            </Typography>
+            <Typography component={NavLink} to="/slide" sx={navLinkStyle}>
+              Slide
             </Typography>
             <Typography component={NavLink} to="/wisata" sx={navLinkStyle}>
               List Wisata

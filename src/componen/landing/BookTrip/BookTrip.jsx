@@ -96,7 +96,7 @@ export const BookTrip = () => {
                   </div>
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <div className="fw-bold text-primary">
-                      {formatPrice(wisata.harga)}
+                      {formatPrice(wisata.harga)}/Person
                     </div>
                     <div className="text-muted">
                       <BuildingIcon className="me-2" />

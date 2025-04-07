@@ -1,44 +1,48 @@
 import React, { useState } from 'react';
 import { 
-  Box, 
-  Grid, 
+  Container, 
+  Row, 
+  Col, 
   Card, 
-  CardContent, 
-  Typography, 
-  TableContainer, 
   Table, 
-  TableHead, 
-  TableBody, 
-  TableRow, 
-  TableCell, 
-  Paper, 
+  Badge, 
+  Button, 
   Modal, 
-  Button 
-} from '@mui/material';
+  ListGroup,
+  Spinner
+} from 'react-bootstrap';
+// Import phosphor icons correctly with named imports
 import { 
-  Person, 
-  BookOnline, 
-  TravelExplore 
-} from "@mui/icons-material";
+  Users, 
+  Ticket, 
+  Compass, 
+  Calendar, 
+  User, 
+  MapPin, 
+  Tag, 
+  CurrencyDollar, // Changed from DollarSign
+  Users as PeopleIcon, 
+  WarningCircle // Changed from AlertCircle
+} from '@phosphor-icons/react';
+import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import axios from 'axios';
+import moment from 'moment';
+// Import Bootstrap CSS (important!)
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 axios.defaults.withCredentials = true;
 
 const getApiBaseUrl = () => {
   const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
-  const baseUrl = process.env.REACT_APP_API_BASE_URL.replace(/^https?:\/\//, '');
+  const baseUrl = process.env.REACT_APP_API_BASE_URL?.replace(/^https?:\/\//, '') || 'localhost:3000';
   return `${protocol}://${baseUrl}`;
 };
 
 const fetcher = (url) => axios.get(url).then((res) => res.data);
 
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  return moment(dateString).format('DD MMMM YYYY');
 };
 
 const formatPrice = (price) => {
@@ -54,190 +58,374 @@ export const Dashboard = () => {
   const { data: wisataData } = useSWR(`${getApiBaseUrl()}/getwisata`, fetcher);
 
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  const handleOpen = (booking) => {
+  const handleShowModal = (booking) => {
     setSelectedBooking(booking);
-    setOpen(true);
+    setShowModal(true);
   };
 
-  const handleClose = () => {
+  const handleCloseModal = () => {
     setSelectedBooking(null);
-    setOpen(false);
+    setShowModal(false);
   };
 
-  if (!userData || !bookingData || !wisataData) return <Typography>Loading...</Typography>;
+  if (!userData || !bookingData || !wisataData) {
+    return (
+      <Container className="py-5 text-center">
+        <Spinner animation="border" variant="primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+        <p className="mt-3">Loading dashboard data...</p>
+      </Container>
+    );
+  }
 
   const totalUsers = userData.data.length;
   const totalBookings = bookingData.data.length;
   const totalWisata = wisataData.data.length;
 
+  // Calculate stats for the dashboard
+  const pendingBookings = bookingData.data.filter(booking => booking.status === 'pending').length;
+  const completedBookings = bookingData.data.filter(booking => booking.status === 'settlement').length;
+  const totalRevenue = bookingData.data
+  .filter(booking => booking.status === 'settlement')
+  .reduce((sum, booking) => sum + parseFloat(booking.totalHarga), 0);
+
   return (
-    <Box sx={{ flexGrow: 1, p: { xs: 1, sm: 3 }, backgroundColor: '#f4f6f8', minHeight: '100vh' }}>
-      {/* Statistics Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{
-            bgcolor: "#73C7C7",
-            color: "white",
-            textAlign: "center",
-            boxShadow: 3,
-            transition: "0.3s",
-            "&:hover": { transform: "scale(1.05)", boxShadow: 6 },
-          }}>
-            <CardContent>
-              <Person sx={{ fontSize: 40 }} />
-              <Typography variant="h6" gutterBottom>Total Users</Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>{totalUsers}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+    <Container fluid className="py-4 bg-light min-vh-100">
 
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{
-            bgcolor: "#BAD8B6",
-            color: "white",
-            textAlign: "center",
-            boxShadow: 3,
-            transition: "0.3s",
-            "&:hover": { transform: "scale(1.05)", boxShadow: 6 },
-          }}>
-            <CardContent>
-              <BookOnline sx={{ fontSize: 40 }} />
-              <Typography variant="h6" gutterBottom>Total Bookings</Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>{totalBookings}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+      {/* Stats Cards */}
+      <Row className="g-4 mb-5">
+        <Col xs={12} md={6} xl={3}>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-sm h-100">
+              <Card.Body className="d-flex align-items-center">
+                <div className="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                  <Users size={24} className="text-primary" weight="bold" />
+                </div>
+                <div>
+                  <h6 className="text-muted mb-1">Total Users</h6>
+                  <p>{totalUsers}</p>
+                </div>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        </Col>
 
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{
-            bgcolor: "#e17055",
-            color: "white",
-            textAlign: "center",
-            boxShadow: 3,
-            transition: "0.3s",
-            "&:hover": { transform: "scale(1.05)", boxShadow: 6 },
-          }}>
-            <CardContent>
-              <TravelExplore sx={{ fontSize: 40 }} />
-              <Typography variant="h6" gutterBottom>Travel Packages</Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }}>{totalWisata}</Typography>
-            </CardContent>
+        <Col xs={12} md={6} xl={3}>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Card className="border-0 shadow-sm h-100">
+              <Card.Body className="d-flex align-items-center">
+                <div className="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                  <Ticket size={24} className="text-success" weight="bold" />
+                </div>
+                <div>
+                  <h6 className="text-muted mb-1">Total Bookings</h6>
+                  <p>{totalBookings}</p>
+                </div>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        </Col>
+
+        <Col xs={12} md={6} xl={3}>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <Card className="border-0 shadow-sm h-100">
+              <Card.Body className="d-flex align-items-center">
+                <div className="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                  <Compass size={24} className="text-info" weight="bold" />
+                </div>
+                <div>
+                  <h6 className="text-muted mb-1">Travel Packages</h6>
+                  <p>{totalWisata}</p>
+                </div>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        </Col>
+
+        <Col xs={12} md={6} xl={3}>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+          >
+            <Card className="border-0 shadow-sm h-100">
+              <Card.Body className="d-flex align-items-center">
+                <div className="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                  <CurrencyDollar size={24} className="text-warning" weight="bold" />
+                </div>
+                <div>
+                  <h6 className="text-muted mb-1">Total Revenue</h6>
+                  <p>{formatPrice(totalRevenue)}</p>
+                </div>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        </Col>
+      </Row>
+
+      {/* Booking Stats */}
+      <Row className="mb-4">
+        <Col xs={12}>
+          <Card className="border-0 shadow-sm">
+            <Card.Body>
+              <h5 className="card-title mb-4">Booking Overview</h5>
+              <Row>
+                <Col md={4}>
+                  <div className="d-flex align-items-center mb-3 mb-md-0">
+                    <div className="rounded p-2 bg-primary bg-opacity-10 me-3">
+                      <Ticket size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-muted mb-0">Total Bookings</p>
+                      <p>{totalBookings}</p>
+                    </div>
+                  </div>
+                </Col>
+                <Col md={4}>
+                  <div className="d-flex align-items-center mb-3 mb-md-0">
+                    <div className="rounded p-2 bg-warning bg-opacity-10 me-3">
+                      <WarningCircle size={20} className="text-warning" />
+                    </div>
+                    <div>
+                      <p className="text-muted mb-0">Pending</p>
+                      <p>{pendingBookings}</p>
+                    </div>
+                  </div>
+                </Col>
+                <Col md={4}>
+                  <div className="d-flex align-items-center">
+                    <div className="rounded p-2 bg-success bg-opacity-10 me-3">
+                      <Ticket size={20} className="text-success" />
+                    </div>
+                    <div>
+                      <p className="text-muted mb-0">Completed</p>
+                      <p>{completedBookings}</p>
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+            </Card.Body>
           </Card>
-        </Grid>
-      </Grid>
+        </Col>
+      </Row>
 
       {/* Bookings Table */}
-      <Box sx={{ mb: 5 }}>
-        <Typography variant="h6" gutterBottom>Booking Data</Typography>
-        <TableContainer component={Paper} sx={{ overflowX: 'auto', maxWidth: '100%', borderRadius: 2 }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Booking Date</TableCell>
-                <TableCell>Customer</TableCell>
-                <TableCell>Package</TableCell>
-                <TableCell>Total People</TableCell>
-                <TableCell>Total Price</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {bookingData.data.map((booking) => (
-                <TableRow key={booking.id}>
-                  <TableCell>{formatDate(booking.tanggalBooking)}</TableCell>
-                  <TableCell>{booking.user.username}</TableCell>
-                  <TableCell>{booking.wisatum.nama}</TableCell>
-                  <TableCell>{booking.jumlahOrang}</TableCell>
-                  <TableCell>{formatPrice(booking.totalHarga)}</TableCell>
-                  <TableCell>
-                    <span style={{
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      backgroundColor: booking.status === 'pending' ? '#ffeeba' : '#c3e6cb',
-                      color: booking.status === 'pending' ? '#856404' : '#155724'
-                    }}>
-                      {booking.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button 
-                      size="small" 
-                      variant="outlined" 
-                      onClick={() => handleOpen(booking)}
-                    >
-                      Detail
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+      <Row>
+        <Col xs={12}>
+          <Card className="border-0 shadow-sm">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h5 className="card-title mb-0">Booking Data</h5>
+                <Button variant="outline-primary" size="sm">
+                  Export
+                </Button>
+              </div>
 
-      {/* Detail Modal */}
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="booking-detail-modal"
+              <div className="table-responsive">
+                <Table hover className="align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Date</th>
+                      <th>Customer</th>
+                      <th>Package</th>
+                      <th>People</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bookingData.data.map((booking) => (
+                      <tr key={booking.id}>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <Calendar size={18} className="text-muted me-2" />
+                            {formatDate(booking.tanggalBooking)}
+                          </div>
+                        </td>
+                        <td>{booking.user.username}</td>
+                        <td>{booking.wisatum.nama}</td>
+                        <td>{booking.jumlahOrang}</td>
+                        <td>{formatPrice(booking.totalHarga)}</td>
+                        <td>
+                          <Badge 
+                            bg={booking.status === 'pending' ? "warning" : "success"} 
+                            className="rounded-pill"
+                          >
+                            {booking.status}
+                          </Badge>
+                        </td>
+                        <td>
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            onClick={() => handleShowModal(booking)}
+                          >
+                            Details
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Booking Detail Modal */}
+      <Modal 
+        show={showModal} 
+        onHide={handleCloseModal} 
+        centered
+        size="lg"
       >
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: { xs: '90%', sm: 400 },
-          bgcolor: 'background.paper',
-          borderRadius: 2,
-          boxShadow: 24,
-          p: 4,
-        }}>
+        <Modal.Header closeButton>
+          <Modal.Title>Booking Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
           {selectedBooking && (
-            <>
-              <Typography variant="h6" gutterBottom>Booking Details</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Typography><strong>Customer:</strong> {selectedBooking.user.username}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography><strong>Email:</strong> {selectedBooking.user.email}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography><strong>Phone:</strong> {selectedBooking.user.phone}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography><strong>Package:</strong> {selectedBooking.wisatum.nama}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography><strong>Location:</strong> {selectedBooking.wisatum.lokasi}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography><strong>Category:</strong> {selectedBooking.wisatum.kategori.namaKategori}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography><strong>Booking Date:</strong> {formatDate(selectedBooking.tanggalBooking)}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography><strong>Total People:</strong> {selectedBooking.jumlahOrang}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography><strong>Total Price:</strong> {formatPrice(selectedBooking.totalHarga)}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography><strong>Status:</strong> {selectedBooking.status}</Typography>
-                </Grid>
-              </Grid>
-              <Box sx={{ mt: 3, textAlign: 'right' }}>
-                <Button variant="contained" onClick={handleClose}>Close</Button>
-              </Box>
-            </>
+            <Row>
+              <Col md={6}>
+                <Card className="border-0 mb-4 mb-md-0">
+                  <Card.Body>
+                    <h6 className="text-muted mb-3">Customer Information</h6>
+                    <ListGroup variant="flush">
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <User size={20} className="text-muted me-3" />
+                        <div>
+                          <small className="text-muted d-block">Customer</small>
+                          <span>{selectedBooking.user.username}</span>
+                        </div>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <div className="text-muted me-3" style={{ width: '20px', textAlign: 'center' }}>@</div>
+                        <div>
+                          <small className="text-muted d-block">Email</small>
+                          <span>{selectedBooking.user.email}</span>
+                        </div>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <div className="text-muted me-3" style={{ width: '20px', textAlign: 'center' }}>📞</div>
+                        <div>
+                          <small className="text-muted d-block">Phone</small>
+                          <span>{selectedBooking.user.phone}</span>
+                        </div>
+                      </ListGroup.Item>
+                    </ListGroup>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={6}>
+                <Card className="border-0">
+                  <Card.Body>
+                    <h6 className="text-muted mb-3">Booking Information</h6>
+                    <ListGroup variant="flush">
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <Compass size={20} className="text-muted me-3" />
+                        <div>
+                          <small className="text-muted d-block">Package</small>
+                          <span>{selectedBooking.wisatum.nama}</span>
+                        </div>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <MapPin size={20} className="text-muted me-3" />
+                        <div>
+                          <small className="text-muted d-block">Location</small>
+                          <span>{selectedBooking.wisatum.lokasi}</span>
+                        </div>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <Tag size={20} className="text-muted me-3" />
+                        <div>
+                          <small className="text-muted d-block">Category</small>
+                          <span>{selectedBooking.wisatum.kategori.namaKategori}</span>
+                        </div>
+                      </ListGroup.Item>
+                    </ListGroup>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
           )}
-        </Box>
+          
+          {selectedBooking && (
+            <Card className="border-0 mt-4">
+              <Card.Body>
+                <h6 className="text-muted mb-3">Reservation Details</h6>
+                <Row>
+                  <Col sm={6}>
+                    <ListGroup variant="flush">
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <Calendar size={20} className="text-muted me-3" />
+                        <div>
+                          <small className="text-muted d-block">Booking Date</small>
+                          <span>{formatDate(selectedBooking.tanggalBooking)}</span>
+                        </div>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <PeopleIcon size={20} className="text-muted me-3" />
+                        <div>
+                          <small className="text-muted d-block">Total People</small>
+                          <span>{selectedBooking.jumlahOrang} persons</span>
+                        </div>
+                      </ListGroup.Item>
+                    </ListGroup>
+                  </Col>
+                  <Col sm={6}>
+                    <ListGroup variant="flush">
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <CurrencyDollar size={20} className="text-muted me-3" />
+                        <div>
+                          <small className="text-muted d-block">Total Price</small>
+                          <span className="fw-bold">{formatPrice(selectedBooking.totalHarga)}</span>
+                        </div>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="px-0 py-2 d-flex border-0">
+                        <WarningCircle size={20} className="text-muted me-3" />
+                        <div>
+                          <small className="text-muted d-block">Status</small>
+                          <Badge 
+                            bg={selectedBooking.status === 'pending' ? "warning" : "success"} 
+                            className="rounded-pill"
+                          >
+                            {selectedBooking.status}
+                          </Badge>
+                        </div>
+                      </ListGroup.Item>
+                    </ListGroup>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Close
+          </Button>
+          <Button variant="primary">
+            Print Details
+          </Button>
+        </Modal.Footer>
       </Modal>
-    </Box>
+    </Container>
   );
 };
 
